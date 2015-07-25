@@ -59,9 +59,15 @@ jint JNICALL JNI_OnLoad(JavaVM* vm, void* /*reserved*/)
     uenv.venv = NULL;
     LOGD("enter JNI_OnLoad()");
 
-    if (vm->GetEnv(&uenv.venv, JNI_VERSION_1_4) != JNI_OK)
+    int version;
+    if (vm->GetEnv(&uenv.venv, JNI_VERSION_1_4) == JNI_OK)
     {
-        LOGE("ERROR: GetEnv failed");
+    	version = JNI_VERSION_1_4;
+    } else if (vm->GetEnv(&uenv.venv, JNI_VERSION_1_6) == JNI_OK)
+    {
+    	version = JNI_VERSION_1_6;
+    } else {
+    	LOGE("ERROR: GetEnv failed");
         return -1;
     }
     
@@ -81,7 +87,7 @@ jint JNICALL JNI_OnLoad(JavaVM* vm, void* /*reserved*/)
     g_deviceInfoClass = (jclass)uenv.env->NewGlobalRef(uenv.env->FindClass("org/openni/DeviceInfo"));
 
     LOGD("JNI_OnLoad() complete!");
-    return JNI_VERSION_1_4;
+    return version;
 }
 
 JNIEXPORT
@@ -89,11 +95,17 @@ void JNICALL JNI_OnUnload(JavaVM* vm, void * /*reserved*/)
 {
     UnionJNIEnvToVoid uenv;
     uenv.venv = NULL;
-    if (vm->GetEnv(&uenv.venv, JNI_VERSION_1_4) != JNI_OK)
+    int version;
+    if (vm->GetEnv(&uenv.venv, JNI_VERSION_1_4) == JNI_OK)
     {
-        LOGE("ERROR: GetEnv failed");
+    	version = JNI_VERSION_1_4;
+    } else if (vm->GetEnv(&uenv.venv, JNI_VERSION_1_6) == JNI_OK)
+    {
+    	version = JNI_VERSION_1_6;
+    } else {
+    	LOGE("ERROR: GetEnv failed");
     }
-    else
+    if (version == JNI_VERSION_1_4 || version == JNI_VERSION_1_6)
     {
 		uenv.env->DeleteGlobalRef(g_videoStreamClass);
 		uenv.env->DeleteGlobalRef(g_openNIClass);
